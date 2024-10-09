@@ -14,6 +14,17 @@ Avant de commencer, assurez-vous d'avoir les éléments suivants installés sur 
 
 ---
 
+## 🌐 Cloner le Projet
+
+Pour cloner le projet depuis GitHub, exécutez la commande suivante dans votre terminal :
+
+```bash
+git clone https://github.com/s-dev26/NEO4J-SUBWAY-EXAM.git
+cd NEO4J-SUBWAY-EXAM
+```
+
+---
+
 ## 🚀 Installation de Docker
 
 1. **Téléchargez Docker** :
