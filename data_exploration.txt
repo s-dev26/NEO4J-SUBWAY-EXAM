@@ -1,0 +1,30 @@
+// 1. Nombre de correspondances par station
+MATCH (s:Station)-[:CORRESPONDANCE]->(c)
+RETURN s.nom_gare AS station, COUNT(c) AS nombre_correspondances
+ORDER BY nombre_correspondances DESC;
+
+// 2. Stations à moins de 2 km de LA DEFENSE
+MATCH (s:Station {nom_clean: 'LADEFENSE'})-[:A_PIED]-(nearby)
+RETURN COUNT(nearby) AS stations_proches;
+
+// 3. Temps en métro de LADEFENSE à CHATEAU DE VINCENNES
+MATCH p = shortestPath((start:Station {nom_clean: 'LADEFENSE'})-[:LIAISON*]->(end:Station {nom_clean: 'CHATEAUDEVINCENNES'}))
+RETURN LENGTH(p) * (60 / 40) AS temps_en_minutes; // Temps total en minutes (40 km/h)
+
+// 4. Temps à pied de LADEFENSE à CHATEAU DE VINCENNES
+MATCH (start:Station {nom_clean: 'LADEFENSE'}), (end:Station {nom_clean: 'CHATEAUDEVINCENNES'})
+RETURN SQRT(POW(start.x - end.x, 2) + POW(start.y - end.y, 2)) / 4 AS temps_en_minutes; // 4 km/h
+
+// 5. Temps avec changement à SAINT LAZARE
+MATCH p1 = shortestPath((depart:Station {nom_clean: 'MONTPARNASSEBIENVENUE'})-[:LIAISON*]->(saint:Station {nom_clean: 'SAINTLAZARE'})),
+     p2 = shortestPath((saint)-[:LIAISON*]->(arrivee:Station {nom_clean: 'GABRIELPERI'}))
+RETURN (LENGTH(p1) * (60 / 40) + LENGTH(p2) * (60 / 40)) AS temps_total; // Temps total en minutes
+
+// 6. Stations dans un rayon de 10 stations autour de SAINT LAZARE
+MATCH (s:Station {nom_clean: 'SAINTLAZARE'})-[:LIAISON*..10]->(nearby)
+RETURN COUNT(DISTINCT nearby) AS stations_dans_un_rayon_de_10; // Compte des stations uniques
+
+// 7. Stations dans un rayon de 20 minutes autour de SAINT LAZARE
+MATCH p = (s:Station {nom_clean: 'SAINTLAZARE'})-[:LIAISON*]->(nearby)
+WHERE LENGTH(p) * (60 / 40) <= 20 // 20 minutes en fonction de la vitesse
+RETURN COUNT(DISTINCT nearby) AS stations_dans_un_rayon_de_20_min; // Compte des stations uniques

@@ -1,0 +1,31 @@
+// Création des nœuds pour chaque station et chaque ligne
+LOAD CSV WITH HEADERS FROM 'file:///data/stations.csv' AS row
+MERGE (s:Station {
+    nom_clean: row.nom_clean, 
+    nom_gare: row.nom_gare, 
+    x: toFloat(row.x), 
+    y: toFloat(row.y), 
+    trafic: toInteger(row.Trafic), 
+    ville: row.Ville
+})
+WITH row
+MERGE (l:Ligne {numero: row.ligne})
+MERGE (s)-[:APPARTIENT_A]->(l);
+
+// Création des liaisons entre les stations
+LOAD CSV WITH HEADERS FROM 'file:///data/liaisons.csv' AS row
+MATCH (start:Station {nom_clean: row.start}), (stop:Station {nom_clean: row.stop})
+MERGE (start)-[:LIAISON {ligne: row.ligne}]->(stop)
+MERGE (stop)-[:LIAISON {ligne: row.ligne}]->(start);
+
+// Création des correspondances entre lignes
+MATCH (s1:Station), (s2:Station)
+WHERE s1.nom_clean <> s2.nom_clean AND s1.ligne = s2.ligne
+MERGE (s1)-[:CORRESPONDANCE {duree: 4}]->(s2);
+
+// Création des liaisons à pied pour les stations à moins d'un kilomètre
+MATCH (s1:Station), (s2:Station)
+WHERE id(s1) <> id(s2) AND 
+      SQRT(POW(s1.x - s2.x, 2) + POW(s1.y - s2.y, 2)) < 1000
+MERGE (s1)-[:A_PIED]->(s2)
+MERGE (s2)-[:A_PIED]->(s1);
